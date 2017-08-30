@@ -14,7 +14,6 @@ POS_tag = ["m", "w", "g", "c", "o", "p", "z", "q", "un", "e", "r", "x", "d", "t"
 def print_all_raw(root="data/danmu"):
     with open("data/raw_all.txt","w") as f:
         for i in os.listdir(root):
-            print("i")
             print(i)
             lines,vocabulary_list,vocabulary_size,vocabulary= DataPreProcessing()._proxy_("data/danmu/"+i, POS_tag)
             for line in lines:

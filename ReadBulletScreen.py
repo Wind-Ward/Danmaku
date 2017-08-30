@@ -42,13 +42,13 @@ class BulletScreen(object):
                                    "lineno":lineNo+1}
 
 
-                #提取有效弹幕 有效弹幕为长度>3的弹幕
-                # if len(temp["text"])>=3:
-                #     print(temp["text"])
-                #     tempLine.append(temp)
-                #     for item in temp["text"]:
-                #         if item not in vocabulary:
-                #             vocabulary[item]=0
+                #提取有效弹幕 有效弹幕为长度>0的弹幕
+                if len(temp["text"])>=3:
+                    print(temp["text"])
+                    tempLine.append(temp)
+                    for item in temp["text"]:
+                        if item not in vocabulary:
+                            vocabulary[item]=0
 
 
         lines=sorted(tempLine, key= lambda e:(e.__getitem__('time')))
