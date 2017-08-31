@@ -17,9 +17,9 @@ def grab_word2vec_calc():
 
 POS_tag = ["m", "w", "g", "c", "o", "p", "z", "q", "un", "e", "r", "x", "d", "t", "h", "k", "y", "u", "s", "uj",
                "ul","r", "eng"]
-file_name="data/danmu/1.xml"
+file_name="data/danmu/33.xml"
 timeInterval = 200
-time_length = 2582
+time_length = 2581
 
 class DanmakuModel(object):
     def __init__(self):
@@ -55,13 +55,12 @@ class DanmakuModel(object):
     def print_result(self,C,index):
         raw = open(file_name, "r").readlines()
         with open("result.txt", "a") as f:
-            f.write("slice:"+str(index))
+            f.write("slice:"+str(index)+"\n")
             for i, cluster in enumerate(C):
                 f.write("\tcluster:"+str(i))
                 for j, item in enumerate(cluster):
                     #print(item) print(item[0])
                     print(raw[item[0]-1])
-
                     f.write("\t\t"+raw[item[0]-1])
 
 
@@ -69,7 +68,7 @@ class DanmakuModel(object):
 
     def main(self):
         for index,slice in enumerate(self.comment_list):
-            C = DBSCAN(slice, 0.1, 10)
+            C = DBSCAN(slice, 0.08, 3)
             print("total cluster size:" + str(len(C)))
             self.print_result(C,index)
 

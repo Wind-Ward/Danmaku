@@ -43,7 +43,7 @@ class BulletScreen(object):
 
 
                 #提取有效弹幕 有效弹幕为长度>0的弹幕
-                if len(temp["text"])>=3:
+                if len(temp["text"])>=2:
                     #print(temp["text"])
                     tempLine.append(temp)
                     for item in temp["text"]:

@@ -36,8 +36,6 @@ class DataPreProcessing(object):
                     doc=[]
                     break
 
-
-
         self.addRestComment()
         #print len(self.docSet)
         #self.print_docSet(self.docSet)
@@ -54,19 +52,13 @@ class DataPreProcessing(object):
 
 
 
-
-
-
-
-
 #[{'text': ['伪装', '着看', '完'], 'time': 0, 'lineno': 2730}, {'text': ['欢乐颂', '取', '汁源', '诚信', '发'], 'time': 0, 'lineno': 5308}, {'text': ['全集', '私', '私', '威信', '来来来'],
 if __name__=="__main__":
     #时间片大小、单位秒
-    timeInterval = 100
+    timeInterval = 300
     # 所要分析的弹幕文件
-    file_name = "data/danmu/1.xml"
-    # 所要分析弹幕文件的时间长度
-    time_length = 2582
+    file_name = "data/danmu/33.xml"
+    time_length = 2581
 
     POS_tag = ["m", "w", "g", "c", "o", "p", "z", "q", "un", "e", "r", "x", "d", "t", "h", "k", "y", "u", "s", "uj",
                "ul",
