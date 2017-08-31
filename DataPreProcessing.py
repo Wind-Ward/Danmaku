@@ -10,7 +10,6 @@ class DataPreProcessing(object):
     def __init__(self):
         self.docSet=[]
 
-
     def addRestComment(self):
         doc=[]
         while (len(self.lines) != 0):
@@ -18,8 +17,6 @@ class DataPreProcessing(object):
                 doc.append(self.lines[0])
                 self.lines.pop(0)
         self.docSet.append(doc)
-
-
 
 
     def sliceWithTime(self,timeInterval,file_name,time_length,POS_tag):
@@ -44,13 +41,25 @@ class DataPreProcessing(object):
         self.addRestComment()
         #print len(self.docSet)
         #self.print_docSet(self.docSet)
+        self.print_order_comment(file_name)
         return self.docSet
 
+    def print_order_comment(self,file_name):
+        raw=open(file_name,"r").readlines()
+        with open("data/processed_danmu/processed_"+str(file_name.split("/")[-1].split(".")[0]+str(".txt")),"w") as f:
+            for i,slice in enumerate(self.docSet):
+                f.write("slice"+str(i)+"\n")
+                for item in slice:
+                    f.write("\t"+raw[item["lineno"]-1])
 
 
 
-#返回格式
-#[[u'伪装', u'着看', u'完', u'僵尸', u'王', u'欢乐颂', u'取', u'汁源', u'诚信', u'发', u'全集', u'私', u'私', u'威信', u'来来来', u'欢乐颂', u'全集', u'超清', u'微信', u'欢乐颂',
+
+
+
+
+
+#[{'text': ['伪装', '着看', '完'], 'time': 0, 'lineno': 2730}, {'text': ['欢乐颂', '取', '汁源', '诚信', '发'], 'time': 0, 'lineno': 5308}, {'text': ['全集', '私', '私', '威信', '来来来'],
 if __name__=="__main__":
     #时间片大小、单位秒
     timeInterval = 100

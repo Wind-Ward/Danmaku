@@ -69,7 +69,8 @@ if __name__=="__main__":
     POS_tag = ["m", "w", "g", "c", "o", "p", "z", "q", "un", "e", "r", "x", "d", "t", "h", "k", "y", "u", "s", "uj",
                "ul",
                "r", "eng"]
-    print(BulletScreen().run(file_name,POS_tag))
+    lines,vocabulary=BulletScreen().run(file_name,POS_tag)
+    print(lines)
     #lines
     #[{'lineno': 2041, 'time': 0, 'text': ['小伙伴', '你们好']}, {'lineno': 2729, 'time': 0, 'text': ['伪装', '着看', '完']}, {'lineno': 4227, 'time': 0, 'text': ['僵尸', '极品']},
 

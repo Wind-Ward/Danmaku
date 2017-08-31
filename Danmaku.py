@@ -33,8 +33,7 @@ class DanmakuModel(object):
         lines = DataPreProcessing().sliceWithTime(timeInterval,file_name,time_length,POS_tag)
         self.N = len(lines)
         for i,slice  in enumerate(lines):
-            if i==1:
-                break
+            comments=[]
             for index, line in enumerate(slice):
                 total = np.zeros(300)
                 print(line["text"])
@@ -46,21 +45,33 @@ class DanmakuModel(object):
                 total= total / len(line["text"])
                 _total=list(total)
                 _total.insert(0, line["lineno"])
-                self.comment_list.append(tuple(_total))
-        print(self.comment_list[0])
-        print("slice 0 size:")
-        print(len(self.comment_list))
+                comments.append(tuple(_total))
+            self.comment_list.append(comments)
 
-    #[[(0.719, 0.103), (0.556, 0.215), (0.481, 0.149), (0.666, 0.091), (0.639, 0.161), (0.748, 0.232),
+        # print("slice 0 size:")
+        # print(len(self.comment_list))
+
+
+    def print_result(self,C,index):
+        raw = open(file_name, "r").readlines()
+        with open("result.txt", "a") as f:
+            f.write("slice:"+str(index))
+            for i, cluster in enumerate(C):
+                f.write("\tcluster:"+str(i))
+                for j, item in enumerate(cluster):
+                    #print(item) print(item[0])
+                    print(raw[item[0]-1])
+
+                    f.write("\t\t"+raw[item[0]-1])
+
+
+    # [[(0.719, 0.103), (0.556, 0.215), (0.481, 0.149), (0.666, 0.091), (0.639, 0.161), (0.748, 0.232),
+
     def main(self):
-        C = DBSCAN(self.comment_list,0.1,5)
-        print()
-        #print(C)
-        print("len C:"+str(len(C)))
-
-        for item in C:
-           print(len(item))
-
+        for index,slice in enumerate(self.comment_list):
+            C = DBSCAN(slice, 0.1, 10)
+            print("total cluster size:" + str(len(C)))
+            self.print_result(C,index)
 
 
 if __name__ == '__main__':
