@@ -15,7 +15,7 @@ def print_all_raw(root="data/danmu"):
     with open("data/raw_all.txt","w") as f:
         for i in os.listdir(root):
             print(i)
-            lines,vocabulary_list,vocabulary_size,vocabulary= DataPreProcessing_for_word2vector()._proxy_("data/danmu/"+i, POS_tag)
+            lines,vocabulary_list,vocabulary_size,vocabulary= DataPreProcessing()._proxy_("data/danmu/"+i, POS_tag)
             for line in lines:
                 f.write(" ".join(line["text"]) + "\n")
 
