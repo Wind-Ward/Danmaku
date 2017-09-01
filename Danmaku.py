@@ -54,10 +54,10 @@ class DanmakuModel(object):
 
     def print_result(self,C,index):
         raw = open(file_name, "r").readlines()
-        with open("result_33_0.005_4.txt", "a") as f:
+        with open("result_33_0.08_2.txt", "a") as f:
             f.write("slice:"+str(index)+"\n")
             for i, cluster in enumerate(C):
-                f.write("\tcluster:"+str(i))
+                f.write("\tcluster:"+str(i)+"\n")
                 for j, item in enumerate(cluster):
                     #print(item) print(item[0])
                     print(raw[item[0]-1])
@@ -68,7 +68,7 @@ class DanmakuModel(object):
 
     def main(self):
         for index,slice in enumerate(self.comment_list):
-            C = DBSCAN(slice,0.005,4)
+            C = DBSCAN(slice,0.08,2)
             print("total cluster size:" + str(len(C)))
             self.print_result(C,index)
 
