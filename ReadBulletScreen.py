@@ -39,7 +39,8 @@ class BulletScreen(object):
                                    "text":[word  for word,flag in pseg.cut(m.group(2))  \
                                            if word not in self.stop_words and flag not in \
                                            POS_tag ],
-                                   "lineno":lineNo+1}
+                                        #and len(word)>1
+                                   "lineno":lineNo+1,"content":m.group(2)}
 
 
                 #提取有效弹幕 有效弹幕为长度>0的弹幕

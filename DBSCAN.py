@@ -25,7 +25,7 @@ def cos_distance(vector1,vector2):
 def dist(a, b):
 
     #return cos_distance(np.array(a[1:]),np.array(b[1:]))
-    return np.sqrt(np.power(np.array(a[1:]) - np.array(b[1:]), 2).sum())
+    return np.sqrt(np.power(np.array(a[3:]) - np.array(b[3:]), 2).sum())
 
 #算法模型
 def DBSCAN(D, e, Minpts):

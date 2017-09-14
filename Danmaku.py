@@ -1,7 +1,7 @@
 from DBSCAN import *
 import numpy as np
 from gensim.models import word2vec
-from DataPreProcessing import DataPreProcessing
+from DataPreProcessing_slice_file import DataPreProcessing
 
 try:
     import cPickle as pickle
@@ -44,7 +44,9 @@ class DanmakuModel(object):
                         self.error+=1
                 total= total / len(line["text"])
                 _total=list(total)
-                _total.insert(0, line["lineno"])
+                _total.insert(0," ".join(line["text"]))
+                _total.insert(0,line["content"])
+                _total.insert(0,line["lineno"])
                 comments.append(tuple(_total))
             self.comment_list.append(comments)
 
@@ -63,6 +65,20 @@ class DanmakuModel(object):
                     print(raw[item[0]-1])
                     f.write("\t\t"+raw[item[0]-1])
 
+    def print_result_2(self, C, index):
+        with open("result_33_0.005_2_cluster_raw.txt", "a") as f:
+            f.write("slice:" + str(index) + "\n")
+            for i, cluster in enumerate(C):
+                f.write("\tcluster:" + str(i) + "\n")
+                for j, item in enumerate(cluster):
+                    f.write("\t\t" +item[1]+"\n")
+
+    def print_result_3(self, C, index):
+        with open("./data/processed_danmu/slice_cluster_file/"+"result_33_0.005_2_cluster_slice_"+str(index)+".txt", "w") as f:
+            for i, cluster in enumerate(C):
+                for j, item in enumerate(cluster):
+                    f.write(item[1]+"\n")
+
 
     # [[(0.719, 0.103), (0.556, 0.215), (0.481, 0.149), (0.666, 0.091), (0.639, 0.161), (0.748, 0.232),
 
@@ -70,12 +86,14 @@ class DanmakuModel(object):
         for index,slice in enumerate(self.comment_list):
             C = DBSCAN(slice,0.005,2)
             print("total cluster size:" + str(len(C)))
-            self.print_result(C,index)
+            #self.print_result(C,index)
+            self.print_result_2(C, index)
+            self.print_result_3(C,index)
 
 
 if __name__ == '__main__':
     d=DanmakuModel()
     d.main()
-    print("error")
+    print("error:")
     print(d.error)
     #print(set(dataset))
