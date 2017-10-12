@@ -48,7 +48,7 @@ class DanmakuModel(object):
                 _total=list(total)
                 _total.insert(0," ".join(line["text"]))
                 _total.insert(0,line["content"])
-                _total.insert(0, line["time"])
+                _total.insert(0, int(line["time"]))
                 _total.insert(0,line["lineno"])
                 comments.append(tuple(_total))
             self.comment_list.append(comments)
@@ -97,17 +97,17 @@ class DanmakuModel(object):
                     else:
                         dict[_]+=1
                     if _ not in time:
-                        time[_]={"min":item[2],"max":item[2]}
+                        time[_]={"min":item[1],"max":item[1]}
                     else:
-                        if item[2]>=time[_]["max"]:
-                            time[_]["max"]=item[2]
-                        elif item[2]<time[_]["min"]:
-                            time[_]["min"]=item[2]
+                        if item[1]>=time[_]["max"]:
+                            time[_]["max"]=item[1]
+                        elif item[1]<time[_]["min"]:
+                            time[_]["min"]=item[1]
 
         tf=np.array(list(dict.values()))
         tf=tf/np.sum(tf)
         substract_time=[]
-        for k,y in time.items():
+        for k,v in time.items():
             substract_time.append(v["max"]-v["min"])
 
         max_index=np.argsort(-np.log(np.array(substract_time))*tf)[:3]
@@ -119,9 +119,9 @@ class DanmakuModel(object):
     def print_keyword_result(self):
         with open("result_33_0.005_2_keyword.txt", "w") as f:
                for index,i in enumerate(self.keyword_result):
-                   print("slice:"+str(index))
+                   f.write("slice:"+str(index)+"\n")
                    for j in i:
-                       print("\t"+j)
+                       f.write(("\t"+j)+"\n")
 
 
     def main(self):
@@ -130,7 +130,7 @@ class DanmakuModel(object):
             C = DBSCAN(slice,0.005,2)
             print("total cluster size:" + str(len(C)))
             self.keyword(C)
-            self.print_keyword_result()
+        self.print_keyword_result()
 
             #self.print_result(C,index)
             #self.print_result_2(C, index)

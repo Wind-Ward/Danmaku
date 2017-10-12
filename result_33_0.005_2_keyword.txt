@@ -1,0 +1,14 @@
+slice:0	孩子	猥琐	熊
+slice:1	岚岚	物业	笑
+slice:2	干得漂亮	樊姐
+slice:3	饿死	算了	妈妈
+slice:4	黑	最惨	高级
+slice:5	孩子	熊	医生
+slice:6	救急	救穷	关关
+slice:7	女	捞	房子   应该为 捞女 房子
+slice:8	建议	关闭	弹幕
+slice:9	屁	奇点	内疚   应该为  奇点  内疚个屁
+slice:10    王柏川	跪到	 墙
+slice:11	小曲	赞	干
+slice:12	关关	嫁	可爱
+slice：200s
