@@ -1,5 +1,7 @@
 import numpy as np
 from collections import OrderedDict
+from collections import Counter
+from scipy.special import gamma
 K=5
 C=5
 L=3
@@ -58,7 +60,12 @@ class Danmaku_LDA(object):
         self.delta=0.1
         self.gamma=0.1
         self.alpha=0.1
-        self.beta=0.1
+        self.beta=np.zeros((self.C,self.L,self.K,self.V),dtype=np.float32)
+
+        #neural
+        self.beta[:,0,:,:]=0.05
+        self.beta[:,1,:,:] = 0.05
+        self.beta[:,2,:,:] = 0.9
 
         self.omega=np.zeros(self.C,np.float32)
         self.pi=np.zeros((self.C,self.L),np.float32)
@@ -66,6 +73,25 @@ class Danmaku_LDA(object):
         self.phi=np.zeros((self.C,self.L,self.K,self.V),np.float32)
 
 
+    def init_beta(self):
+        positive_list=[]
+        with open("../data/positive.txt","r") as f:
+            positive_list.extend(f.read().split("\n").strip())
+            for positive in positive_list:
+                if positive in self.dpre.word2id:
+                    index=self.dpre.word2id[positive]
+                    self.beta[:,0,:,index]=0.9
+                    self.beta[:,1,:,index]=0.05
+                    self.beta[:,2,:,index]=0.05
+
+        with open("../data/negative.txt","r") as f:
+            negative_list.exnted(f.read().split("\n").strip())
+            for negative in negative_list:
+                if negative in self.dpre.word2id:
+                    index=self.dpre.word2id[negative]
+                    self.beta[:, 0, :, index] = 0.05
+                    self.beta[:, 1, :, index] = 0.9
+                    self.beta[:, 2, :, index] = 0.05
 
 
     def sampling(self,i):
@@ -74,19 +100,23 @@ class Danmaku_LDA(object):
         self.n_d_c_l[_c,_l]-=1
         self.n_d_c_l_k[_c,_l,_k]-=1
 
-
         word_id_list=self.dpre.docs[i].words
+        _word_count=Counter(word_id_list)
+        N_d=self.dpre.docs[i].length
         self.p=np.zeros((self.C,self.L,self.K),np.float32)
         temp=self.D - 1 + self.C * self.delta
         for c in range(self.C):
             for l in range(self.L):
                 for k in range(self.K):
+                    _temp=np.sum(self.n_w_c_l_k_v[c,l,k])+np.sum(self.beta[c,l,k])
                     self.p[c,l,k]=(self.n_d_c[c]+self.delta)/temp*(self.n_d_c_l[c,l]+self.gamma)/\
                                   (self.n_d_c[c]+self.L*self.gamma)*(self.n_d_c_l_k[c,l,k]+self.alpha)/\
-                                  (self.n_d_c_l[c,l]+self.K*self.alpha)
+                                  (self.n_d_c_l[c,l]+self.K*self.alpha)*gamma(_temp-N_d)/\
+                                  gamma(_temp)
                     _result=1.0
-                    for v in word_id_list:
-                        _result*=(self.n_w_c_l_k_v[c,l,k,v]-1+self.beta)/(np.sum(self.n_w_c_l_k_v[c,l,k])-1+self.V*self.beta)
+                    for v,counter in _word_count.items():
+                        _result*=gamma(self.n_w_c_l_k_v[c,l,k,v]+self.beta[c,l,k,v])/gamma(self.n_w_c_l_k_v[c,l,k,v]-counter+self.beta[c,l,k,v])
+
                     self.p[c,l,k]*=_result
         _cum_p=np.cumsum(self.p)
         u=np.random.random_sample()
@@ -98,7 +128,6 @@ class Danmaku_LDA(object):
         self.n_d_c[_c] += 1
         self.n_d_c_l[_c, _l] += 1
         self.n_d_c_l_k[_c, _l, _k] += 1
-
 
         _c=int(index/(self.L*self.K))
         _temp=index%(self.L*self.K)
@@ -127,7 +156,7 @@ class Danmaku_LDA(object):
             for l in range(self.L):
                 self.theta[c,l]=(self.n_d_c_l_k[c,l,:]+self.alpha)/(self.n_d_c_l[c,l]+self.K*self.alpha)
                 for k in range(self.K):
-                    self.phi[c,l,k]=(self.n_w_c_l_k_v[c,l,k,:]+self.beta)/(np.sum(self.n_w_c_l_k_v[c,l,k,:])+self.V*self.beta)
+                    self.phi[c,l,k]=(self.n_w_c_l_k_v[c,l,k]+self.beta[c,l,k])/(np.sum(self.n_w_c_l_k_v[c,l,k])+np.sum(self.beta[c,l,k]))
 
 
 
