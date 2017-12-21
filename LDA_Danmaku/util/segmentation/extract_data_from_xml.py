@@ -42,15 +42,12 @@ class BulletScreen(object):
                                         #and len(word)>1
                                    "lineno":lineNo+1,"content":m.group(2)}
 
-
-                #提取有效弹幕 有效弹幕为长度>0的弹幕
-                if len(temp["text"])>=3:
-                    #print(temp["text"])
+                if len(temp["text"]) >= 0:
+                    # print(temp["text"])
                     tempLine.append(temp)
                     for item in temp["text"]:
                         if item not in vocabulary:
-                            vocabulary[item]=0
-
+                            vocabulary[item] = 0
 
         lines=sorted(tempLine, key= lambda e:(e.__getitem__('time')))
         # print(vocabulary)
@@ -60,13 +57,11 @@ class BulletScreen(object):
     def run(self,file_name,POS_tag):
         self.load_stop_words()
         lines,vocabulary=self.read(file_name,POS_tag)
-        with open("33.txt","w") as f:
+        with open("origin_33.txt","w") as f:
             #f.write("\n".join(lines))
             for item in lines:
-                f.write(" ".join(item["text"]))
+                f.write(item["content"]+str(" ."))
                 f.write("\n")
-
-
         return lines,vocabulary
 
 
@@ -80,6 +75,7 @@ if __name__=="__main__":
     #            "r", "eng"]
     POS_tag = ["eng","un","w","y","e","c","x","m","z","p","o","h"]
     lines,vocabulary=BulletScreen().run(file_name,POS_tag)
+
     #print(lines)
     #lines
     #[{'lineno': 2041, 'time': 0, 'text': ['小伙伴', '你们好']}, {'lineno': 2729, 'time': 0, 'text': ['伪装', '着看', '完']}, {'lineno': 4227, 'time': 0, 'text': ['僵尸', '极品']},

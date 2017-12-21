@@ -2,12 +2,12 @@ import numpy as np
 from collections import OrderedDict
 from collections import Counter
 from scipy.special import gamma
+from datetime import datetime
 K=5
 C=5
 L=3
-alpha = 0.1
-beta = 0.1
-top_N = 5
+
+top_N = 10
 
 
 class Document(object):
@@ -25,7 +25,7 @@ class DataPreProcessing(object):
         self.id2word={}
 
 class Danmaku_LDA(object):
-    def __init__(self,dpre,iters=10):
+    def __init__(self,dpre,iters=1000):
         self.dpre=dpre
         self.iters=iters
         self.K=K
@@ -62,65 +62,70 @@ class Danmaku_LDA(object):
         self.alpha=0.1
         self.beta=np.zeros((self.C,self.L,self.K,self.V),dtype=np.float32)
 
-        #neural
-        self.beta[:,0,:,:]=0.05
-        self.beta[:,1,:,:] = 0.05
-        self.beta[:,2,:,:] = 0.9
+        #0 positive 1 negative 2 neural
+        self.beta[:,0,:,:]=0.005
+        self.beta[:,1,:,:] = 0.005
+        self.beta[:,2,:,:] = 0.99
 
         self.omega=np.zeros(self.C,np.float32)
         self.pi=np.zeros((self.C,self.L),np.float32)
         self.theta=np.zeros((self.C,self.L,self.K),np.float32)
         self.phi=np.zeros((self.C,self.L,self.K,self.V),np.float32)
+        self.init_beta()
 
 
     def init_beta(self):
         positive_list=[]
-        with open("../data/positive.txt","r") as f:
-            positive_list.extend(f.read().split("\n").strip())
+        with open("./util/positive.txt","r") as f:
+            positive_list.extend(f.read().split("\n"))
+            num=0
             for positive in positive_list:
+                positive=positive.strip()
                 if positive in self.dpre.word2id:
+                    num+=1
                     index=self.dpre.word2id[positive]
-                    self.beta[:,0,:,index]=0.9
-                    self.beta[:,1,:,index]=0.05
-                    self.beta[:,2,:,index]=0.05
-
-        with open("../data/negative.txt","r") as f:
-            negative_list.exnted(f.read().split("\n").strip())
+                    self.beta[:,0,:,index]=0.99
+                    self.beta[:,1,:,index]=0.005
+                    self.beta[:,2,:,index]=0.005
+            print("positive_num:%d" % num)
+        negative_list=[]
+        with open("./util/negative.txt","r") as f:
+            negative_list.extend(f.read().split("\n"))
+            num = 0
             for negative in negative_list:
+                negative=negative.strip()
                 if negative in self.dpre.word2id:
+                    num+=1
                     index=self.dpre.word2id[negative]
-                    self.beta[:, 0, :, index] = 0.05
-                    self.beta[:, 1, :, index] = 0.9
-                    self.beta[:, 2, :, index] = 0.05
+                    self.beta[:, 0, :, index] = 0.005
+                    self.beta[:, 1, :, index] = 0.99
+                    self.beta[:, 2, :, index] = 0.005
+            print("negative_num:%d" % num)
 
 
     def sampling(self,i):
         _c,_l,_k=self.danmaku_C_L_Z_list[i]
-        self.n_d_c[_c]-=1
-        self.n_d_c_l[_c,_l]-=1
-        self.n_d_c_l_k[_c,_l,_k]-=1
-
         word_id_list=self.dpre.docs[i].words
         _word_count=Counter(word_id_list)
         N_d=self.dpre.docs[i].length
         self.p=np.zeros((self.C,self.L,self.K),np.float32)
-        temp=self.D - 1 + self.C * self.delta
         for c in range(self.C):
             for l in range(self.L):
                 for k in range(self.K):
-                    _temp=np.sum(self.n_w_c_l_k_v[c,l,k])+np.sum(self.beta[c,l,k])
-                    self.p[c,l,k]=(self.n_d_c[c]+self.delta)/temp*(self.n_d_c_l[c,l]+self.gamma)/\
+                    _result = 1.0
+                    _temp=0.0
+                    for v, counter in _word_count.items():
+                        _result *= gamma(self.n_w_c_l_k_v[c, l, k, v] + self.beta[c, l, k, v]+ counter) / gamma(self.n_w_c_l_k_v[c, l, k, v]  + self.beta[c, l, k, v])
+                        _temp+=self.n_w_c_l_k_v[c,l,k,v]+self.beta[c,l,k,v]
+                    self.p[c,l,k]=(self.n_d_c[c]+self.delta)*(self.n_d_c_l[c,l]+self.gamma)/\
                                   (self.n_d_c[c]+self.L*self.gamma)*(self.n_d_c_l_k[c,l,k]+self.alpha)/\
-                                  (self.n_d_c_l[c,l]+self.K*self.alpha)*gamma(_temp-N_d)/\
-                                  gamma(_temp)
-                    _result=1.0
-                    for v,counter in _word_count.items():
-                        _result*=gamma(self.n_w_c_l_k_v[c,l,k,v]+self.beta[c,l,k,v])/gamma(self.n_w_c_l_k_v[c,l,k,v]-counter+self.beta[c,l,k,v])
-
+                                  (self.n_d_c_l[c,l]+self.K*self.alpha)*gamma(_temp)/\
+                                  gamma(_temp+N_d)
                     self.p[c,l,k]*=_result
-        _cum_p=np.cumsum(self.p)
-        u=np.random.random_sample()
 
+        _cum_p=np.cumsum(self.p)
+
+        u = np.random.uniform(0, _cum_p[-1])
         for index,item in enumerate(_cum_p):
             if item>u:
                 break
@@ -139,11 +144,11 @@ class Danmaku_LDA(object):
 
     def estimation(self):
         for x in range(self.iters):
-            print("x")
-            print(x)
+            t1=datetime.now()
             for i in range(self.D):
-                print(i)
                 self.sampling(i)
+            t2=datetime.now()
+            print("iter:%d time:%s" % (x,str(t2-t1)))
         self.calc_paramters()
         self.write()
 
@@ -157,8 +162,6 @@ class Danmaku_LDA(object):
                 self.theta[c,l]=(self.n_d_c_l_k[c,l,:]+self.alpha)/(self.n_d_c_l[c,l]+self.K*self.alpha)
                 for k in range(self.K):
                     self.phi[c,l,k]=(self.n_w_c_l_k_v[c,l,k]+self.beta[c,l,k])/(np.sum(self.n_w_c_l_k_v[c,l,k])+np.sum(self.beta[c,l,k]))
-
-
 
 
     def write(self):
@@ -183,8 +186,6 @@ class Danmaku_LDA(object):
                         for item in id_list:
                             f.write("\t%s" % self.dpre.id2word[item])
                         f.write("\n")
-
-
 
 
 def preprocessing(trainfile):
@@ -217,7 +218,10 @@ def preprocessing(trainfile):
 def main(trainfile):
     dpre = preprocessing(trainfile)
     lda = Danmaku_LDA(dpre)
+    s1=datetime.now()
     lda.estimation()
+    s2=datetime.now()
+    print("totoal time:%s" % str(s2-s1))
 
 if __name__ == '__main__':
     main("./33.txt")

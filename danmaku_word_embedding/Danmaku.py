@@ -1,8 +1,9 @@
-from DBSCAN import *
 from collections import OrderedDict
+
 import numpy as np
-from gensim.models import word2vec
-from DataPreProcessing_slice_file import DataPreProcessing
+from DBSCAN import *
+
+from danmaku_word_embedding.DataPreProcessing_slice_file import DataPreProcessing
 
 try:
     import cPickle as pickle

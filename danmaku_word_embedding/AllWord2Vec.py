@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-from DataPreProcessing_for_word2vector import DataPreProcessing
-from gensim.models import word2vec
 import logging
 import os
+
+from gensim.models import word2vec
+
+from danmaku_word_embedding.DataPreProcessing_for_word2vector import DataPreProcessing
+
 try:
     import cPickle as pickle
 except ImportError:

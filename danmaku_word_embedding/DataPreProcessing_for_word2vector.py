@@ -1,8 +1,10 @@
 
-import numpy as np
 import copy
-from ReadBulletScreen import BulletScreen
-from collections import OrderedDict
+
+import numpy as np
+
+from danmaku_word_embedding.ReadBulletScreen import BulletScreen
+
 try:
     import cPickle as pickle
 except ImportError:

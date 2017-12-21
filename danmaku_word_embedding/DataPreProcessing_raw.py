@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
-from ReadBulletScreen import BulletScreen
-from collections import OrderedDict
-
+from danmaku_word_embedding.ReadBulletScreen import BulletScreen
 
 
 class DataPreProcessing(object):
