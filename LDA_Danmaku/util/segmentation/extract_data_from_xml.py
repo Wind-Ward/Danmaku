@@ -36,9 +36,9 @@ class BulletScreen(object):
             m=pattern.match(line)
             if m:
                 temp={"time":int(float(m.group(1).split(',')[0])), \
-                                   "text":[word  for word,flag in pseg.cut(m.group(2))  \
-                                           if word not in self.stop_words and flag not in \
-                                           POS_tag ],
+                                   # "text":[word  for word,flag in pseg.cut(m.group(2))  \
+                                   #         if word not in self.stop_words and flag not in \
+                                   #         POS_tag ],
                                         #and len(word)>1
                                    "lineno":lineNo+1,"content":m.group(2)}
 
@@ -55,7 +55,7 @@ class BulletScreen(object):
 
 
     def run(self,file_name,POS_tag):
-        self.load_stop_words()
+        #self.load_stop_words()
         lines,vocabulary=self.read(file_name,POS_tag)
         with open("origin_33.txt","w") as f:
             #f.write("\n".join(lines))

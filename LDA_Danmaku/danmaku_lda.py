@@ -5,8 +5,7 @@ from scipy.special import gamma
 from datetime import datetime
 K=5
 C=5
-L=3
-
+L=2
 top_N = 10
 
 
@@ -58,14 +57,14 @@ class Danmaku_LDA(object):
 
 
         self.delta=0.1
-        self.gamma=0.1
+        self.gamma=1.0
         self.alpha=0.1
         self.beta=np.zeros((self.C,self.L,self.K,self.V),dtype=np.float32)
 
         #0 positive 1 negative 2 neural
-        self.beta[:,0,:,:]=0.005
-        self.beta[:,1,:,:] = 0.005
-        self.beta[:,2,:,:] = 0.99
+        # self.beta[:,0,:,:]=0.005
+        # self.beta[:,1,:,:] = 0.005
+        # self.beta[:,2,:,:] = 0.99
 
         self.omega=np.zeros(self.C,np.float32)
         self.pi=np.zeros((self.C,self.L),np.float32)
@@ -84,9 +83,14 @@ class Danmaku_LDA(object):
                 if positive in self.dpre.word2id:
                     num+=1
                     index=self.dpre.word2id[positive]
-                    self.beta[:,0,:,index]=0.99
-                    self.beta[:,1,:,index]=0.005
-                    self.beta[:,2,:,index]=0.005
+                    # self.beta[:,0,:,index]=0.99
+                    # self.beta[:,1,:,index]=0.005
+                    # self.beta[:,2,:,index]=0.005
+
+                    self.beta[:, 0, :, index] = 0.001
+                    self.beta[:, 1, :, index] = 0.0
+
+
             print("positive_num:%d" % num)
         negative_list=[]
         with open("./util/negative.txt","r") as f:
@@ -97,31 +101,64 @@ class Danmaku_LDA(object):
                 if negative in self.dpre.word2id:
                     num+=1
                     index=self.dpre.word2id[negative]
-                    self.beta[:, 0, :, index] = 0.005
-                    self.beta[:, 1, :, index] = 0.99
-                    self.beta[:, 2, :, index] = 0.005
+                    # self.beta[:, 0, :, index] = 0.005
+                    # self.beta[:, 1, :, index] = 0.99
+                    # self.beta[:, 2, :, index] = 0.005
+
+                    self.beta[:, 0, :, index] = 0.0
+                    self.beta[:, 1, :, index] = 0.001
             print("negative_num:%d" % num)
 
 
     def sampling(self,i):
         _c,_l,_k=self.danmaku_C_L_Z_list[i]
+        self.n_d_c[_c] -= 1
+        self.n_d_c_l[_c, _l] -= 1
+        self.n_d_c_l_k[_c, _l, _k] -= 1
+
         word_id_list=self.dpre.docs[i].words
         _word_count=Counter(word_id_list)
         N_d=self.dpre.docs[i].length
         self.p=np.zeros((self.C,self.L,self.K),np.float32)
+
         for c in range(self.C):
             for l in range(self.L):
                 for k in range(self.K):
                     _result = 1.0
                     _temp=0.0
+                    total_beta =np.sum(self.beta[c,l,k,:])
+                    total_n_w_c_l_k=np.sum(self.n_w_c_l_k_v[c,l,k])
+                    m_0=0
                     for v, counter in _word_count.items():
-                        _result *= gamma(self.n_w_c_l_k_v[c, l, k, v] + self.beta[c, l, k, v]+ counter) / gamma(self.n_w_c_l_k_v[c, l, k, v]  + self.beta[c, l, k, v])
-                        _temp+=self.n_w_c_l_k_v[c,l,k,v]+self.beta[c,l,k,v]
-                    self.p[c,l,k]=(self.n_d_c[c]+self.delta)*(self.n_d_c_l[c,l]+self.gamma)/\
-                                  (self.n_d_c[c]+self.L*self.gamma)*(self.n_d_c_l_k[c,l,k]+self.alpha)/\
-                                  (self.n_d_c_l[c,l]+self.K*self.alpha)*gamma(_temp)/\
-                                  gamma(_temp+N_d)
-                    self.p[c,l,k]*=_result
+                        for num in range(counter):
+                            _result*=(total_n_w_c_l_k+self.beta[c,l,k,v]+num)/(total_beta+m_0)
+                            m_0+=1
+
+                            # for (Word sWord: wordCnt.keySet()) {
+                            #     SentiWord
+                            # word = (SentiWord)
+                            # sWord;
+                            #
+                            # double
+                            # beta;
+                            # if (word.lexicon == null) beta = this.betas[0];
+                            # else if (word.lexicon == si) beta = this.betas[1];
+                            # else beta = this.betas[2];
+                            #
+                            # double betaw = matrixSWT[si].getValue(word.wordNo, ti) + beta;
+                            #
+                            # int cnt = wordCnt.get(word);
+                            # for (int m = 0; m < cnt; m++) {
+                            # expectTSW *= (betaw + m) / (beta0 + m0);
+                            # m0++;
+                            # }
+                    #     _result *= gamma(self.n_w_c_l_k_v[c, l, k, v] + self.beta[c, l, k, v]+ counter) / gamma(self.n_w_c_l_k_v[c, l, k, v]  + self.beta[c, l, k, v])
+                    #     _temp+=self.n_w_c_l_k_v[c,l,k,v]+self.beta[c,l,k,v]
+                    # self.p[c,l,k]=(self.n_d_c[c]+self.delta)*(self.n_d_c_l[c,l]+self.gamma)/\
+                    #               (self.n_d_c[c]+self.L*self.gamma)*(self.n_d_c_l_k[c,l,k]+self.alpha)/\
+                    #               (self.n_d_c_l[c,l]+self.K*self.alpha)*gamma(_temp)/\
+                    #               gamma(_temp+N_d)
+                    # self.p[c,l,k]*=_result
 
         _cum_p=np.cumsum(self.p)
 
@@ -130,9 +167,9 @@ class Danmaku_LDA(object):
             if item>u:
                 break
 
-        self.n_d_c[_c] += 1
-        self.n_d_c_l[_c, _l] += 1
-        self.n_d_c_l_k[_c, _l, _k] += 1
+        # self.n_d_c[_c] += 1
+        # self.n_d_c_l[_c, _l] += 1
+        # self.n_d_c_l_k[_c, _l, _k] += 1
 
         _c=int(index/(self.L*self.K))
         _temp=index%(self.L*self.K)
@@ -168,7 +205,6 @@ class Danmaku_LDA(object):
         with open("character.txt","w") as f:
             f.write(str(self.omega))
 
-
         with open("sentiment_label.txt","w") as f:
             f.write(str(self.pi))
 
@@ -186,6 +222,19 @@ class Danmaku_LDA(object):
                         for item in id_list:
                             f.write("\t%s" % self.dpre.id2word[item])
                         f.write("\n")
+
+    def perplexity(self, docs=None):
+        if docs == None: docs = self.docs
+        phi = self.worddist()
+        log_per = 0
+        N = 0
+        Kalpha = self.K * self.alpha
+        for m, doc in enumerate(docs):
+            theta = self.n_m_z[m] / (len(self.docs[m]) + Kalpha)
+            for w in doc:
+                log_per -= numpy.log(numpy.inner(phi[:, w], theta))
+            N += len(doc)
+        return numpy.exp(log_per / N)
 
 
 def preprocessing(trainfile):
@@ -224,7 +273,8 @@ def main(trainfile):
     print("totoal time:%s" % str(s2-s1))
 
 if __name__ == '__main__':
-    main("./33.txt")
+    #main("./util/segmentation/segmented_nlpir_33_has_single_word.txt")
+    main("./util/segmentation/segmented_nlpir_33.txt")
 
 
 

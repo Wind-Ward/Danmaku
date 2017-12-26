@@ -17,7 +17,7 @@ def add_stop_words(file_name="./stopWords.txt"):
     return set(stop_words)
 
 
-def segment(pos_tag,read_file_name="./origin_33.txt",write_file_name="./segmented_nlpir_33.txt"):
+def segment(pos_tag,read_file_name="./origin_33.txt",write_file_name="./segmented_nlpir_33_has_single_word.txt"):
     result = []
     stop_words=add_stop_words()
     with open(read_file_name,"r") as f:
@@ -28,7 +28,9 @@ def segment(pos_tag,read_file_name="./origin_33.txt",write_file_name="./segmente
                 if word[1] not in pos_tag and word[0] not in stop_words:
                     pattern = re.compile("[a-zA-Z0-9@]+")
                     m = pattern.match(word[0])
-                    if not m and len(word[0])>1:
+                    # if not m and len(word[0])>1:
+                    #     _.append(word[0])
+                    if not m :
                         _.append(word[0])
             result.append(_)
 
