@@ -83,6 +83,7 @@ class LDAModel(object):
 
         self.theta = np.array([[0.0 for y in xrange(self.K)] for x in xrange(self.dpre.docs_count)])
         self.phi = np.array([[0.0 for y in xrange(self.dpre.words_count)] for x in xrange(self.K)])
+        print(self.phi.shape)
 
     def sampling(self, i, j):
 
@@ -112,18 +113,30 @@ class LDAModel(object):
 
         return topic
 
-    def est(self):
 
+    def perplexity(self):
+        N = 0
+        log_per = 0.0
+        for index,doc in enumerate(self.dpre.docs):
+            for word_id in doc.words:
+                log_per-=np.log(np.inner(self.phi[:,word_id],self.theta[index]))
+            N+=doc.length
+
+        _perplexity=np.exp(log_per/N)
+        print("perplexity:%f" % _perplexity)
+        return _perplexity
+
+    def est(self):
         for x in xrange(self.iter_times):
             for i in xrange(self.dpre.docs_count):
-
                 for j in xrange(self.dpre.docs[i].length):
                     topic = self.sampling(i, j)
                     self.Z[i][j] = topic
 
         self._theta()
         self._phi()
-        self.save()
+        _perplexity=self.perplexity()
+        self.save(_perplexity)
         return self.theta
 
     def _theta(self):
@@ -134,7 +147,7 @@ class LDAModel(object):
         for i in xrange(self.K):
             self.phi[i] = (self.nw.T[i] + self.beta) / (self.nwsum[i] + self.dpre.words_count * self.beta)
 
-    def save(self):
+    def save(self,_perplexity):
         # 保存theta文章-主题分布
 
         with codecs.open(self.thetafile, 'w') as f:
@@ -151,11 +164,9 @@ class LDAModel(object):
                 f.write('\n')
         # 保存参数设置
 
-
         # 保存每个主题topic的词
-
-
         with codecs.open(self.topNfile, 'w', 'utf-8') as f:
+            f.write("perplexity:%f\n" % _perplexity)
             self.top_words_num = min(self.top_words_num, self.dpre.words_count)
             for x in xrange(self.K):
                 f.write(u'第' + str(x) + u'类：' + '\n')
@@ -216,4 +227,5 @@ def run(trainfile):
 
 
 if __name__ == '__main__':
-    run("../data/lda/33.txt")
+    #run("./util/segmentation/segmented_nlpir_33.txt")
+    run("./util/segmentation/segmented_nlpir_33_has_single_word.txt")
