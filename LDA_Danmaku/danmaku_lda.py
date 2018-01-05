@@ -2,13 +2,12 @@
 import numpy as np
 from collections import OrderedDict
 from collections import Counter
-# from scipy.special import gamma
 from datetime import datetime
 
 C=5
 L=2
 K=2
-top_N = 5
+top_N = 10
 
 class Document(object):
     def __init__(self):
@@ -62,11 +61,12 @@ class Danmaku_LDA(object):
 
 
 
-        self.delta=0.001
-        self.gamma=1.0
+        #可以直接修改参数
+        self.delta=1
+        self.gamma=0.5
         self.alpha=0.1
         self.beta=np.zeros((self.C,self.L,self.K,self.V),dtype=np.float32)
-        self.positive_beta=0.001
+        self.positive_beta=1.0
         self.negative_beta=0.0
 
         #0 positive 1 negative 2 neural
@@ -80,6 +80,8 @@ class Danmaku_LDA(object):
         self.phi=np.zeros((self.C,self.L,self.K,self.V),np.float32)
         self.init_beta()
 
+
+    #对每一条弹幕初始化对应的人物c
     def init_danmaku_C(self):
         with open("./util/character_33.txt","r") as f:
             p={}
@@ -102,7 +104,7 @@ class Danmaku_LDA(object):
         print(character)
 
 
-
+    #对每一条弹幕根据情感词典初始化对应的情感标签l
     def init_danmaku_L(self):
         with open("./util/positive.txt","r") as f:
             positive_list=[]
@@ -132,6 +134,9 @@ class Danmaku_LDA(object):
             print("danmaku negative num: %d" %negative_num)
 
 
+
+
+    #对每一条弹幕根据情感词典 初始化每一个单词对应的beta
     def init_beta(self):
         positive_list=[]
         with open("./util/positive.txt","r") as f:
@@ -169,6 +174,7 @@ class Danmaku_LDA(object):
             print("negative word num:%d" % num)
 
 
+    #使用Gibbs采样来计算联合概率分布
     def sampling(self,i):
         _c,_l,_k=self.danmaku_C_L_Z_list[i]
         self.n_d_c[_c] -= 1
@@ -177,7 +183,6 @@ class Danmaku_LDA(object):
 
         word_id_list=self.dpre.docs[i].words
         for id in word_id_list:
-             #if self.n_w_c_l_k_v[_c,_l,_k,id]!=0:
                 self.n_w_c_l_k_v[_c,_l,_k,id]-=1
 
         _word_count=Counter(word_id_list)
@@ -201,9 +206,10 @@ class Danmaku_LDA(object):
                     self.p[c,l,k]=(self.n_d_c[c]+self.delta)*(self.n_d_c_l[c,l]+self.gamma)/\
                                   (self.n_d_c[c]+self.L*self.gamma)*(self.n_d_c_l_k[c,l,k]+self.alpha)/\
                                   (self.n_d_c_l[c,l]+self.K*self.alpha)*_result
-                    if self.p[c,l,k]<0:
-                        print("fuck")
-                        print("p[c,l,k]=%f" % self.p[c,l,k])
+                    # if self.p[c,l,k]<0:
+                    #     print("fuck")
+                    #     print("p[c,l,k]=%f" % self.p[c,l,k])
+                    #     exit(0)
                     #print(self.p)
 
         _cum_p=np.cumsum(self.p)
@@ -241,7 +247,7 @@ class Danmaku_LDA(object):
         self.write(_perplexity)
 
 
-
+    #来计算模型的困惑度
     def perplexity(self):
         N = 0
         log_per = 0.0
@@ -261,11 +267,7 @@ class Danmaku_LDA(object):
         return _perplexity
 
 
-
-
-
-
-
+    #计算后验分布
     def calc_paramters(self):
         self.omega=(self.n_d_c+self.delta)/(self.D+self.C*self.delta)
         for c in range(self.C):
@@ -275,15 +277,20 @@ class Danmaku_LDA(object):
                 for k in range(self.K):
                     self.phi[c,l,k]=(self.n_w_c_l_k_v[c,l,k]+self.beta[c,l,k])/(np.sum(self.n_w_c_l_k_v[c,l,k])+np.sum(self.beta[c,l,k]))
 
-
+    #将后验分布以文本的形式加以输出
     def write(self,_perplexity):
+
         with open("character.txt","w") as f:
             f.write(str(self.omega))
+
 
         with open("sentiment_label.txt","w") as f:
             f.write(str(self.pi))
 
-        with open("topic.txt","w") as f:
+        with open("sentiment_topic.txt", "w") as f:
+            f.write(str(self.theta))
+
+        with open("topic-vocabulary.txt","w") as f:
             f.write(str(self.phi))
 
         with open("character_sentimental_topic_analysis.txt","w") as f:
@@ -314,6 +321,8 @@ class Danmaku_LDA(object):
 
 
 
+
+#对弹幕文本做预处理
 def preprocessing(trainfile):
     with open(trainfile, 'r') as f:
         docs = f.readlines()
@@ -350,8 +359,8 @@ def main(trainfile):
     print("totoal time:%s" % str(s2-s1))
 
 if __name__ == '__main__':
-    main("./util/segmentation/segmented_nlpir_33.txt")
-    #main("./util/segmentation/segmented_nlpir_33_has_single_word.txt")
+    main("./util/segmented_nlpir_33.txt")
+    #main("./util/segmented_nlpir_33_has_single_word.txt")
 
 
 

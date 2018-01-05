@@ -1,0 +1,49 @@
+1.安装依赖
+    pip3 install numpy
+2.程序运行：
+    python3 danmaku_lda.py
+
+3.运行结束会在当前目录下生成的文件
+    包括：
+
+    ```
+
+    character.txt   #对应人物的分布omega
+    character_sentimental_topic_analysis.txt     #应对高频词的输出结果，所要查询的结果
+    parameters.txt          #对应模型使用的参数
+    sentiment_label.txt     #对应模型pi
+    sentiment_topic.txt     #对应模型theta
+    topic-vocabulary.txt.txt  #对应模型phi
+    ```
+
+
+
+
+4.参数修改方式
+
+    danmaku_lda.py 脚本中 65~70行直接修改即可
+    、、、
+            self.delta=1
+            self.gamma=0.5
+            self.alpha=0.1
+            self.beta=np.zeros((self.C,self.L,self.K,self.V),dtype=np.float32)
+            self.positive_beta=1.0
+            self.negative_beta=0.0
+    、、、、
+
+
+
+5.util包含重要的文件
+
+    ```
+    util
+        positive.txt    #正向情感词典
+        negative.txt    #负向情感词典
+        character_33.txt    #33集所对应的人物
+        segmented_nlpir_33.txt                    #LDA弹幕所要分析的文本
+        segmented_nlpir_33_has_single_word.txt
+
+
+    ```
+
+
